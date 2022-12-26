@@ -1,9 +1,7 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:movies/core/error/exception.dart';
+import 'package:movies/core/network/api_constant.dart';
 import 'package:movies/core/network/erroe_messege_model.dart';
-import 'package:movies/core/utils/app_constance.dart';
 import 'package:movies/movies/data/models/movie_model.dart';
 
 abstract class BaseMovieRemoteDataSource {
@@ -17,58 +15,40 @@ abstract class BaseMovieRemoteDataSource {
 class MovieRemoteDataSource extends BaseMovieRemoteDataSource {
   @override
   Future<List<MovieModel>> getNowPlayingMovies() async {
-    var url = Uri.https(AppConstance.baseUrl, '/movie/now_playing',
-        {'api_key': AppConstance.apiKey});
+    final response = await Dio().get(ApiConstance.nowPlayingMoviesPath);
 
-    var response = await http.get(url);
     if (response.statusCode == 200) {
-      List body = jsonDecode(response.body);
-      List<MovieModel> movies =
-          body.map((e) => MovieModel.fromJson(e)).toList();
-
-      return movies;
+      return List<MovieModel>.from((response.data['results'] as List)
+          .map((e) => MovieModel.fromJson(e)));
     } else {
       throw ServerException(
-          errorMessageModel: ErrorMessageModel.fromJson(
-              (response.body) as Map<String, dynamic>));
+          errorMessageModel: ErrorMessageModel.fromJson((response.data)));
     }
   }
 
   @override
   Future<List<MovieModel>> getPopularMovies() async {
-    var url = Uri.https(AppConstance.baseUrl, '/movie/popular',
-        {'api_key': AppConstance.apiKey});
+    final response = await Dio().get(ApiConstance.popularMoviesPath);
 
-    var response = await http.get(url);
     if (response.statusCode == 200) {
-      List body = jsonDecode(response.body);
-      List<MovieModel> movies =
-          body.map((e) => MovieModel.fromJson(e)).toList();
-
-      return movies;
+      return List<MovieModel>.from((response.data['results'] as List)
+          .map((e) => MovieModel.fromJson(e)));
     } else {
       throw ServerException(
-          errorMessageModel: ErrorMessageModel.fromJson(
-              (response.body) as Map<String, dynamic>));
+          errorMessageModel: ErrorMessageModel.fromJson((response.data)));
     }
   }
 
   @override
   Future<List<MovieModel>> getTopRatedMovies() async {
-    var url = Uri.https(AppConstance.baseUrl, '/movie/top_rated',
-        {'api_key': AppConstance.apiKey});
+    final response = await Dio().get(ApiConstance.topRatedMoviesPath);
 
-    var response = await http.get(url);
     if (response.statusCode == 200) {
-      List body = jsonDecode(response.body);
-      List<MovieModel> movies =
-          body.map((e) => MovieModel.fromJson(e)).toList();
-
-      return movies;
+      return List<MovieModel>.from((response.data['results'] as List)
+          .map((e) => MovieModel.fromJson(e)));
     } else {
       throw ServerException(
-          errorMessageModel: ErrorMessageModel.fromJson(
-              (response.body) as Map<String, dynamic>));
+          errorMessageModel: ErrorMessageModel.fromJson((response.data)));
     }
   }
 }
