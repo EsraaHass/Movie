@@ -4,8 +4,10 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:movies/core/network/api_constant.dart';
+import 'package:movies/core/utils/enums.dart';
 import 'package:movies/movies/presentation/controller/movie_bloc.dart';
 import 'package:movies/movies/presentation/controller/movie_state.dart';
+import 'package:movies/movies/presentation/screens/movie_detail_screen.dart';
 
 class nowPlayingComponents extends StatelessWidget {
   const nowPlayingComponents({Key? key}) : super(key: key);
@@ -13,93 +15,112 @@ class nowPlayingComponents extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MovieBloc, MovieState>(
+      buildWhen: (previous, current) =>
+          previous.nowPlayingState != current.nowPlayingState,
       builder: (context, state) {
-        return FadeIn(
-          duration: const Duration(milliseconds: 500),
-          child: CarouselSlider(
-            options: CarouselOptions(
-              height: 400.0,
-              viewportFraction: 1.0,
-              onPageChanged: (index, reason) {},
-            ),
-            items: state.nowPlayingMovie.map(
-              (item) {
-                return GestureDetector(
-                  key: const Key('openMovieMinimalDetail'),
-                  onTap: () {
-                    /// TODO : NAVIGATE TO MOVIE DETAILS
-                  },
-                  child: Stack(
-                    children: [
-                      ShaderMask(
-                        shaderCallback: (rect) {
-                          return const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              // fromLTRB
-                              Colors.transparent,
-                              Colors.black,
-                              Colors.black,
-                              Colors.transparent,
-                            ],
-                            stops: [0, 0.3, 0.5, 1],
-                          ).createShader(
-                            Rect.fromLTRB(0, 0, rect.width, rect.height),
-                          );
-                        },
-                        blendMode: BlendMode.dstIn,
-                        child: CachedNetworkImage(
-                          height: 560.0,
-                          imageUrl: ApiConstance.imageUrl(item.backdropPath),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.circle,
-                                    color: Colors.redAccent,
-                                    size: 16.0,
+        switch (state.nowPlayingState) {
+          case RequestState.isLoading:
+            return const SizedBox(
+                height: 400, child: Center(child: CircularProgressIndicator()));
+
+          case RequestState.isLoaded:
+            return FadeIn(
+              duration: const Duration(milliseconds: 500),
+              child: CarouselSlider(
+                options: CarouselOptions(
+                  height: 400.0,
+                  viewportFraction: 1.0,
+                  onPageChanged: (index, reason) {},
+                ),
+                items: state.nowPlayingMovie.map(
+                  (item) {
+                    return GestureDetector(
+                      // key: const Key('openMovieMinimalDetail'),
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (BuildContext context) =>
+                                    MovieDetailScreen(id: item.id)));
+                      },
+                      child: Stack(
+                        children: [
+                          ShaderMask(
+                            shaderCallback: (rect) {
+                              return const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  // fromLTRB
+                                  Colors.transparent,
+                                  Colors.black,
+                                  Colors.black,
+                                  Colors.transparent,
+                                ],
+                                stops: [0, 0.3, 0.5, 1],
+                              ).createShader(
+                                Rect.fromLTRB(0, 0, rect.width, rect.height),
+                              );
+                            },
+                            blendMode: BlendMode.dstIn,
+                            child: CachedNetworkImage(
+                              height: 560.0,
+                              imageUrl:
+                                  ApiConstance.imageUrl(item.backdropPath),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 16.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.circle,
+                                        color: Colors.redAccent,
+                                        size: 16.0,
+                                      ),
+                                      const SizedBox(width: 4.0),
+                                      Text(
+                                        'Now Playing'.toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 16.0,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 4.0),
-                                  Text(
-                                    'Now Playing'.toUpperCase(),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 16.0),
+                                  child: Text(
+                                    item.title,
+                                    textAlign: TextAlign.center,
                                     style: const TextStyle(
-                                      fontSize: 16.0,
+                                      fontSize: 24,
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: Text(
-                                item.title,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 24,
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              },
-            ).toList(),
-          ),
-        );
+                    );
+                  },
+                ).toList(),
+              ),
+            );
+
+          case RequestState.isError:
+            return Center(
+              child: Text(state.nowPlayingMessage),
+            );
+        }
       },
     );
   }
