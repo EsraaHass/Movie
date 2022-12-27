@@ -20,7 +20,7 @@ class MoviesScreen extends StatelessWidget {
         ..add(GetTopRatedMoviesEvent()),
       child: Scaffold(
         body: SingleChildScrollView(
-          key: const Key('movieScrollView'),
+         // key: const Key('movieScrollView'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
